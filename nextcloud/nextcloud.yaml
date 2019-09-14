@@ -1,0 +1,72 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:latest
+    volumes:
+    - db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=nextcloud
+      - POSTGRES_PASSWORD=nextcloud
+      - POSTGRES_DB=notthis
+    networks:
+      - internal
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+  nextcloud:
+    image: nextcloud:latest
+    environment:
+      - POSTGRES_USER=nextcloud
+      - POSTGRES_PASSWORD=nextcloud
+      - POSTGRES_DB=nextcloud
+      - POSTGRES_HOST=db:5432
+    volumes:
+      - nextcloud:/var/www/html
+      - apps:/var/www/html/custom_apps
+      - config:/var/www/html/config
+      - data:/var/www/html/data
+    networks:
+      - internal
+      - external
+      - traefik-net
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      labels:
+        traefik.enable: "true"
+        traefik.frontend.rule: "Host:${HOST}"
+        traefik.port: 80
+        traefik.docker.network: traefik-net
+        traefik.frontend.headers.STSSeconds: 63072000
+        traefik.frontend.headers.STSIncludeSubdomains: "true"
+        traefik.frontend.headers.STSPreload: "true"
+        traefik.frontend.redirect.permanent: 'true'
+        traefik.frontend.redirect.regex: https://(.*)/.well-known/(card|cal)dav
+        traefik.frontend.redirect.replacement: https://$$1/remote.php/dav/
+
+
+volumes:
+  db_data:
+  nextcloud:
+  apps:
+  config:
+  data:
+
+
+networks:
+  external:
+  internal:
+    driver: overlay
+    internal: true
+  traefik-net:
+    external: true
+
+### Environment variables
+# HOST

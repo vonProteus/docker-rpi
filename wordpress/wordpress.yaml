@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+  db:
+    image: ofthesun9/mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: wordpress
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+    networks:
+      - internal
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+
+  wordpress:
+    image: wordpress:latest
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+    networks:
+      - internal
+      - external
+      - traefik-net
+    volumes:
+      - wordpress_data:/var/www/html
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      labels:
+        traefik.enable: "true"
+        traefik.frontend.rule: "Host:${HOST}"
+        traefik.port: 80
+        traefik.docker.network: traefik-net
+        traefik.frontend.headers.STSSeconds: 63072000
+        traefik.frontend.headers.STSIncludeSubdomains: "true"
+        traefik.frontend.headers.STSPreload: "true"
+
+
+volumes:
+  db_data:
+  wordpress_data:
+
+networks:
+  external:
+  internal:
+    driver: overlay
+    internal: true
+  traefik-net:
+    external: true
+
+### Environment variables
+# HOST

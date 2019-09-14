@@ -1,0 +1,28 @@
+version: '3.4'
+services:
+  luxmedbookingservice:
+    image: eugenezadyra/luxmed-bot:latest-arm
+    environment:
+      - SECURITY_SECRET=${SECURITY_SECRET}
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - DB_HOST=database
+    volumes:
+    - lbs:/lbs
+
+  database:
+    image: postgres:10.6
+    volumes:
+    - postgres:/var/lib/postgresql/data
+    environment:
+    - POSTGRES_USER=lbs
+    - POSTGRES_PASSWORD=lsb123
+    - POSTGRES_DB=lbs
+    - TZ=Europe/Warsaw
+
+volumes:
+  postgres:
+  lbs:
+
+### Environment variables
+# SECURITY_SECRET
+# TELEGRAM_TOKEN
