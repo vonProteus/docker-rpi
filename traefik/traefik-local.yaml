@@ -33,6 +33,7 @@ services:
       - tmp:/tmp
     networks:
       - traefik-net
+      - external
     deploy:
       mode: global
       placement:
@@ -40,6 +41,7 @@ services:
           - node.role == manager
 
 networks:
+  external:
   traefik-net:
     driver: overlay
     external: true

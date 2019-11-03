@@ -40,13 +40,15 @@ services:
       - tmp:/tmp
     networks:
       - traefik-net
+      - external
     deploy:
       mode: global
       placement:
         constraints:
           - node.role == manager
-          
+
 networks:
+  external:
   traefik-net:
     driver: overlay
     external: true
