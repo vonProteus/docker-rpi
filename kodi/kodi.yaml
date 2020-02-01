@@ -1,0 +1,20 @@
+version: '3.4'
+services:
+  database:
+    image: linuxserver/mariadb
+    volumes:
+      - db_data:/config
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    ports:
+      - target: 3306
+        published: ${DB_POTR}
+        protocol: tcp
+        mode: host
+
+volumes:
+  db_data:
+
+### Environment variables
+# DB_POTR             3306
+# DB_ROOT_PASSWORD
