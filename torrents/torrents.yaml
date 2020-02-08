@@ -15,8 +15,8 @@ services:
       mode: replicated
       replicas: 1
       restart_policy:
-        condition: on-failure
-        delay: 5s
+        delay: 60s
+        window: 120s
 
   jackett:
     image: linuxserver/jackett
@@ -26,21 +26,28 @@ services:
       - PGID=${PGID}
     volumes:
       - jackett_config:/config
-      - downloads:/downloads
+      - data:/data
     ports:
       - target: 9117
         published: ${JACKETTPORT}
         protocol: tcp
         mode: host
     networks:
+      - external
       - tornet
       - internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9117"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     deploy:
       mode: replicated
       replicas: 1
       restart_policy:
-        condition: on-failure
-        delay: 5s
+        delay: 60s
+        window: 120s
 
   radarr:
     image: linuxserver/radarr
@@ -50,18 +57,29 @@ services:
       - PGID=${PGID}
     volumes:
       - radarr_config:/config
-      - downloads:/downloads
-      - radarr_movies:/movies
+      - data:/data
+    ports:
+      - target: 7878
+        published: ${RADARRPORT}
+        protocol: tcp
+        mode: host
     networks:
+      - external
       - tornet
       - internal
       - traefik-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7878"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     deploy:
       mode: replicated
       replicas: 1
       restart_policy:
-        condition: on-failure
-        delay: 5s
+        delay: 60s
+        window: 120s
       labels:
         traefik.enable: "true"
         traefik.frontend.rule: "Host:radarr.${HOSTDOMAIN}"
@@ -79,18 +97,29 @@ services:
       - PGID=${PGID}
     volumes:
       - sonarr_config:/config
-      - downloads:/downloads
-      - sonarr_tvs:/tv
+      - data:/data
+    ports:
+      - target: 8989
+        published: ${SONARRPORT}
+        protocol: tcp
+        mode: host
     networks:
+      - external
       - tornet
       - traefik-net
       - internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8989"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     deploy:
       mode: replicated
       replicas: 1
       restart_policy:
-        condition: on-failure
-        delay: 5s
+        delay: 60s
+        window: 120s
       labels:
         traefik.enable: "true"
         traefik.frontend.rule: "Host:sonarr.${HOSTDOMAIN}"
@@ -113,10 +142,10 @@ services:
         published: ${DELUGEDAEMONPORT}
         protocol: tcp
         mode: host
-#      - target: 8112
-#        published: 8112
-#        protocol: tcp
-#        mode: host
+      - target: 8112
+        published: ${DELUGEWEBUIPORT}
+        protocol: tcp
+        mode: host
       - target: ${DELUGEINCOMINGPORT}
         published:  ${DELUGEINCOMINGPORT}
         protocol: tcp
@@ -130,13 +159,20 @@ services:
       - internal
     volumes:
       - deluge_config:/config
-      - downloads:/downloads
+      - data:/data
+      - /dev/null:/downloads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8112"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     deploy:
       mode: replicated
       replicas: 1
       restart_policy:
-        condition: on-failure
-        delay: 5s
+        delay: 60s
+        window: 120s
 
   smb:
     image: dperson-samba:armhf
@@ -152,9 +188,7 @@ services:
     networks:
       - external
     volumes:
-      - downloads:/downloads
-      - sonarr_tvs:/tv
-      - radarr_movies:/movies
+      - data:/data
       - jackett_config:/configs/jackett
       - radarr_config:/configs/radarr
       - sonarr_config:/configs/sonarr
@@ -164,21 +198,19 @@ services:
       - smb_etc:/etc
       - smb_cache:/var/cache/samba
       - smb_log:/var/log/samba
-    command: '-u "${SMBADMIN};${SMBADMINPASS}" -u "${SMBUSER};${SMBUSERPASS}" -u "${SMBUSERMEDIA};${SMBUSERMEDIAPASS}" -s "configs;/configs;yes;no;no;${SMBADMIN}" -s "tv shows;/tv;yes;no;no;${SMBADMIN},${SMBUSER},${SMBUSERMEDIA}" -s "movies;/movies;yes;no;no;${SMBADMIN},${SMBUSER},${SMBUSERMEDIA}" -s "downloads;/downloads;yes;no;no;${SMBADMIN},${SMBUSER}"' #Note, you should only provide one command statement
+    command: '-u "${SMBADMIN};${SMBADMINPASS}" -u "${SMBUSER};${SMBUSERPASS}" -u "${SMBUSERMEDIA};${SMBUSERMEDIAPASS}" -s "configs;/configs;yes;no;no;${SMBADMIN}" -s "tv shows;/data/tv;yes;no;no;${SMBADMIN},${SMBUSER},${SMBUSERMEDIA}" -s "movies;/data/movies;yes;no;no;${SMBADMIN},${SMBUSER},${SMBUSERMEDIA}" -s "downloads;/data/downloads;yes;no;no;${SMBADMIN},${SMBUSER}"' #Note, you should only provide one command statement
     deploy:
       mode: replicated
       replicas: 1
       restart_policy:
-        condition: on-failure
-        delay: 5s
+        delay: 60s
+        window: 120s
 
 volumes:
-  downloads:
+  data:
   jackett_config:
   radarr_config:
-  radarr_movies:
   sonarr_config:
-  sonarr_tvs:
   deluge_config:
   smb_lib:
   smb_run:
@@ -203,6 +235,9 @@ networks:
 # JACKETTPORT 9117
 # DELUGEINCOMINGPORT  62054
 # DELUGEDAEMONPORT  58846
+# DELUGEWEBUIPORT  8112
+# RADARRPORT  7878
+# SONARRPORT  8989
 # SMBPORT 445
 # SMBADMIN  admin
 # SMBADMINPASS  adminPass
