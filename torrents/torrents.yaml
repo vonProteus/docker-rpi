@@ -129,6 +129,46 @@ services:
         traefik.frontend.headers.STSIncludeSubdomains: "true"
         traefik.frontend.headers.STSPreload: "true"
 
+  bazarr:
+    image: linuxserver/bazarr
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - bazarr_config:/config
+      - data:/data
+    ports:
+      - target: 6767
+        published: ${BAZARRPORT}
+        protocol: tcp
+        mode: host
+    networks:
+      - external # tymczasowo do momentku kiedy nie naprawia sonarr-a
+      - tornet
+      - traefik-net
+      - internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6767"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      labels:
+        traefik.enable: "true"
+        traefik.frontend.rule: "Host:bazarr.${HOSTDOMAIN}"
+        traefik.port: 6767
+        traefik.docker.network: traefik-net
+        traefik.frontend.headers.STSSeconds: 63072000
+        traefik.frontend.headers.STSIncludeSubdomains: "true"
+        traefik.frontend.headers.STSPreload: "true"
+
   deluge:
     image: linuxserver/deluge
     environment:
@@ -193,6 +233,7 @@ services:
       - radarr_config:/configs/radarr
       - sonarr_config:/configs/sonarr
       - deluge_config:/configs/deluge
+      - bazarr_config:/configs/bazarr
       - smb_lib:/var/lib/samba
       - smb_run:/run/samba
       - smb_etc:/etc
@@ -212,6 +253,7 @@ volumes:
   radarr_config:
   sonarr_config:
   deluge_config:
+  bazarr_config:
   smb_lib:
   smb_run:
   smb_etc:
@@ -238,6 +280,7 @@ networks:
 # DELUGEWEBUIPORT  8112
 # RADARRPORT  7878
 # SONARRPORT  8989
+# BAZARRPORT  6767
 # SMBPORT 445
 # SMBADMIN  admin
 # SMBADMINPASS  adminPass
