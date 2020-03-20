@@ -2,6 +2,11 @@ version: '3.4'
 services:
   database:
     image: postgres:12
+    ports:
+     - target: 5432
+       published: ${DBPORT}
+       protocol: tcp
+       mode: host
     volumes:
      - dbdata:/var/lib/postgresql/data
     environment:
@@ -16,3 +21,4 @@ volumes:
 ### Environment variables
 # DBUSER
 # DBPASS
+# DBPORT
