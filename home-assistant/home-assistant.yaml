@@ -1,0 +1,18 @@
+version: '3.4'
+services:
+  database:
+    image: postgres:12
+    volumes:
+     - dbdata:/var/lib/postgresql/data
+    environment:
+     - POSTGRES_USER=${DBUSER}
+     - POSTGRES_PASSWORD=${DBPASS}
+     - POSTGRES_DB=${DBUSER}
+     - TZ=Europe/Warsaw
+
+volumes:
+  dbdata:
+
+### Environment variables
+# DBUSER
+# DBPASS
