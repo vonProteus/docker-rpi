@@ -1,0 +1,84 @@
+version: '3.4'
+services:
+  db:
+    image: postgres:12
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=gitea
+      - POSTGRES_PASSWORD=gitea
+      - POSTGRES_DB=gitea
+    networks:
+      - internal
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+  web:
+    image: gitea-gitea:git
+    volumes:
+      - git_data:/data
+    environment:
+      - USER_UID=${PUID}
+      - USER_GID=${PGID}
+      - RUN_MODE=prod
+      - DB_TYPE=postgres
+      - DB_HOST=db:5432
+      - DB_NAME=gitea
+      - DB_USER=gitea
+      - DB_PASSWD=gitea
+      - SSH_DOMAIN=${HOST}
+      - ROOT_URL=https://${HOST}
+      - LFS_START_SERVER=true
+    ports:
+      - target: 22
+        published: ${SSHPOTRT}
+        protocol: tcp
+        mode: host
+    networks:
+      - internal
+      - external
+      - traefik-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        delay: 60s
+        window: 120s
+      labels:
+        traefik.enable: "true"
+        traefik.frontend.rule: "Host:${HOST}"
+        traefik.port: 3000
+        traefik.docker.network: traefik-net
+        traefik.frontend.headers.STSSeconds: 63072000
+        traefik.frontend.headers.STSIncludeSubdomains: "true"
+        traefik.frontend.headers.STSPreload: "true"
+
+
+
+volumes:
+  db_data:
+  git_data:
+
+
+networks:
+  external:
+  internal:
+    driver: overlay
+    internal: true
+  traefik-net:
+    external: true
+
+### Environment variables
+# HOST
+# SSHPOTRT 47803
+# PUID  1000
+# PGID  1000

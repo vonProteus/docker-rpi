@@ -1,0 +1,33 @@
+version: '3.4'
+services:
+  openssh-server:
+    image: linuxserver/openssh-server
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - SUDO_ACCESS=false
+      - PASSWORD_ACCESS=false
+      - USER_NAME=ssh
+    ports:
+      - target: 2222
+        published: ${SSHPOTRT}
+        protocol: tcp
+        mode: host
+    volumes:
+      - ssh_data:/config
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        delay: 60s
+        window: 120s
+
+volumes:
+  ssh_data:
+
+### Environment variables
+# SSHPOTRT  22
+# PUID  1000
+# PGID  1000
+# TZ  Europe/Warsaw
