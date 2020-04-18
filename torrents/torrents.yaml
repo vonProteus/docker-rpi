@@ -129,6 +129,47 @@ services:
         traefik.frontend.headers.STSIncludeSubdomains: "true"
         traefik.frontend.headers.STSPreload: "true"
 
+  lidarr:
+    image: linuxserver/lidarr
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - lidarr_config:/config
+      - data:/data
+      - /dev/null:/music
+    ports:
+      - target: 8686
+        published: ${LIDARRPORT}
+        protocol: tcp
+        mode: host
+    networks:
+      - external
+      - tornet
+      - traefik-net
+      - internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8686"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        delay: 60s
+        window: 120s
+      labels:
+        traefik.enable: "true"
+        traefik.frontend.rule: "Host:lidarr.${HOSTDOMAIN}"
+        traefik.port: 8686
+        traefik.docker.network: traefik-net
+        traefik.frontend.headers.STSSeconds: 63072000
+        traefik.frontend.headers.STSIncludeSubdomains: "true"
+        traefik.frontend.headers.STSPreload: "true"
+
   bazarr:
     image: linuxserver/bazarr
     environment:
@@ -234,12 +275,13 @@ services:
       - sonarr_config:/configs/sonarr
       - deluge_config:/configs/deluge
       - bazarr_config:/configs/bazarr
+      - lidarr_config:/configs/lidarr
       - smb_lib:/var/lib/samba
       - smb_run:/run/samba
       - smb_etc:/etc
       - smb_cache:/var/cache/samba
       - smb_log:/var/log/samba
-    command: '-u "${SMBADMIN};${SMBADMINPASS}" -u "${SMBUSER};${SMBUSERPASS}" -u "${SMBUSERMEDIA};${SMBUSERMEDIAPASS}" -s "configs;/configs;yes;no;no;${SMBADMIN}" -s "tv shows;/data/tv;yes;no;no;${SMBADMIN},${SMBUSER},${SMBUSERMEDIA}" -s "movies;/data/movies;yes;no;no;${SMBADMIN},${SMBUSER},${SMBUSERMEDIA}" -s "downloads;/data/downloads;yes;no;no;${SMBADMIN},${SMBUSER}"' #Note, you should only provide one command statement
+    command: '-u "${SMBADMIN};${SMBADMINPASS}" -u "${SMBUSER};${SMBUSERPASS}" -u "${SMBUSERMEDIA};${SMBUSERMEDIAPASS}" -s "configs;/configs;yes;no;no;${SMBADMIN}" -s "tv shows;/data/tv;yes;no;no;${SMBADMIN},${SMBUSER},${SMBUSERMEDIA}"  -s "audio;/data/audio;yes;no;no;${SMBADMIN},${SMBUSER},${SMBUSERMEDIA}" -s "movies;/data/movies;yes;no;no;${SMBADMIN},${SMBUSER},${SMBUSERMEDIA}" -s "downloads;/data/downloads;yes;no;no;${SMBADMIN},${SMBUSER}"' #Note, you should only provide one command statement
     deploy:
       mode: replicated
       replicas: 1
@@ -254,6 +296,7 @@ volumes:
   sonarr_config:
   deluge_config:
   bazarr_config:
+  lidarr_config:
   smb_lib:
   smb_run:
   smb_etc:
@@ -281,6 +324,7 @@ networks:
 # RADARRPORT  7878
 # SONARRPORT  8989
 # BAZARRPORT  6767
+# LIDARRPORT  8686
 # SMBPORT 445
 # SMBADMIN  admin
 # SMBADMINPASS  adminPass
