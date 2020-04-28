@@ -3,7 +3,7 @@ version: '3.3'
 
 services:
   reverse-proxy:
-    image: traefik
+    image: traefik:1.7
     command:
       - --defaultentrypoints=https,http
       - --api
@@ -46,7 +46,7 @@ services:
       placement:
         constraints:
           - node.role == manager
-
+          
 networks:
   external:
   traefik-net:
