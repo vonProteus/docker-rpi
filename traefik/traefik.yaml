@@ -11,7 +11,7 @@ services:
       - --api.dashboard=false
       - --debug=false
       - --entryPoints=Name:http Address::80 Compress:true Redirect.EntryPoint:https
-      - --entryPoints=Name:https Address::443 TLS Compress:true TLS.MinVersion:VersionTLS12
+      - --entryPoints=Name:https Address::443 TLS Compress:true TLS.MinVersion:VersionTLS12 TLS.CipherSuites:TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
       - --logLevel=INFO
       - --accessLog.format=json
       - --docker
