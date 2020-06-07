@@ -10,8 +10,8 @@ services:
       - --api.entryPoint=traefik
       - --api.dashboard=false
       - --debug=false
-      - --entryPoints=Name:http Address::80 Redirect.EntryPoint:https
-      - --entryPoints=Name:https Address::443 TLS
+      - --entryPoints=Name:http Address::80 Compress:true Redirect.EntryPoint:https
+      - --entryPoints=Name:https Address::443 TLS Compress:true TLS.MinVersion:VersionTLS12
       - --logLevel=INFO
       - --accessLog.format=json
       - --docker
@@ -46,7 +46,6 @@ services:
       placement:
         constraints:
           - node.role == manager
-          
 networks:
   external:
   traefik-net:
