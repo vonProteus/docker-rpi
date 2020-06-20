@@ -1,0 +1,42 @@
+version: '3.4'
+
+services:
+  podcastgenerator:
+    image: podcastgenerator:arm
+    volumes:
+      - app_data:/app/PodcastGenerator/appdata
+    networks:
+      - internal
+      - external
+      - traefik-net
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      labels:
+        traefik.enable: "true"
+        traefik.frontend.rule: "Host:${HOST}"
+        traefik.port: 80
+        traefik.frontend.auth.basic.users: "${BASICAUTHUSERS}"
+        traefik.docker.network: traefik-net
+        traefik.frontend.headers.STSSeconds: 63072000
+        traefik.frontend.headers.STSIncludeSubdomains: "true"
+        traefik.frontend.headers.STSPreload: "true"
+
+volumes:
+  app_data:
+
+networks:
+  external:
+  internal:
+    driver: overlay
+    internal: true
+  traefik-net:
+    external: true
+
+### Environment variables
+# echo $(htpasswd -nb user qwe321) | sed -e s/\\$/\\$\\$/g
+# HOST
+# BASICAUTHUSERS    user:$$apr1$$UgzGZ8JC$$3XqsN3KQ6qz9hBZylFsb5/
