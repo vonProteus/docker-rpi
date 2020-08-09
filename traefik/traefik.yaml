@@ -8,7 +8,7 @@ services:
       - --defaultentrypoints=https,http
       - --api
       - --api.entryPoint=traefik
-      - --api.dashboard=false
+      - --api.dashboard=true
       - --debug=false
       - --entryPoints=Name:http Address::80 Compress:true Redirect.EntryPoint:https
       - --entryPoints=Name:https Address::443 TLS Compress:true TLS.MinVersion:VersionTLS12 TLS.CipherSuites:TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
@@ -32,6 +32,10 @@ services:
         mode: host
       - target: 443
         published: 443
+        protocol: tcp
+        mode: host
+      - target: 8080
+        published: ${ADMINPORT}
         protocol: tcp
         mode: host
     volumes:
@@ -58,5 +62,6 @@ volumes:
 
 
 ### Environment variables
+# ADMINPORT 8080
 # DOCKER_DOMAIN
 # ACME_EMAIL
