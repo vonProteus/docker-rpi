@@ -4,6 +4,9 @@ services:
     image: vonproteus/internet-speed-monitor
     environment:
       - INFLUXDATABASENAME=ism
+    networks:
+      - external
+      - internal
     deploy:
       mode: replicated
       replicas: 1
@@ -21,14 +24,22 @@ services:
      - INFLUXDB_READ_USER=${DBUSER}
      - INFLUXDB_READ_USER_PASSWORD=${DBPASS}
      - INFLUXDB_DB=ism
-    ports:
-     - target: 8086
-       published: ${DBPORT}
-       protocol: tcp
-       mode: host
+    networks:
+      - internal
+      - grafana-net
 
 volumes:
   data:
+
+networks:
+  external:
+  internal:
+    driver: overlay
+    internal: true
+  traefik-net:
+    external: true
+  grafana-net:
+    external: true
   
 ### Environment variables
 # DBUSER
