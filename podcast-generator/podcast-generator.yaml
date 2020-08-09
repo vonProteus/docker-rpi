@@ -53,8 +53,8 @@ networks:
     external: true
 
 ### Environment variables
-# echo $(htpasswd -nb user qwe321) | sed -e s/\\$/\\$\\$/g
+# htpasswd -nb user qwe321
 # HOST
-# BASICAUTHUSERS    user:$$apr1$$UgzGZ8JC$$3XqsN3KQ6qz9hBZylFsb5/
+# BASICAUTHUSERS    user:$apr1$UgzGZ8JC$3XqsN3KQ6qz9hBZylFsb5/
 # YTURL
 # REGENERATERSSKEY
