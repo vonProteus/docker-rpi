@@ -40,9 +40,6 @@ volumes:
 
 networks:
   external:
-  internal:
-    driver: overlay
-    internal: true
   traefik-net:
     external: true
   grafana-net:

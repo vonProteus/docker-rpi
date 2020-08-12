@@ -1,0 +1,34 @@
+version: '3.4'
+
+services:
+
+  prometheus:
+    image: prom/prometheus
+    networks:
+      - external
+      - prometheus-net
+      - grafana-net
+    volumes:
+      - prometheus_config:/etc/prometheus
+      - prometheus_data:/prometheus
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+
+volumes:
+  prometheus_config:
+  prometheus_data:
+  
+
+networks:
+  external:
+  prometheus-net:
+    driver: overlay
+    attachable: true
+    internal: true
+  grafana-net:
+    external: true
